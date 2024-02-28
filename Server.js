@@ -29,8 +29,14 @@ class Server {
       const key = `${req.url}:${req.method}`;
       // console.log("key: ", key);
       if (this.#middlewares[key]) {
-        const reqBody = await parseRequestBody(req);
-        req.body = reqBody;
+        if (
+          req.method === "POST" ||
+          req.method === "PUT" ||
+          req.method === "PATCH"
+        ) {
+          const reqBody = await parseRequestBody(req);
+          req.body = reqBody;
+        }
         this.#middlewares[key](req, res);
       }
     });

@@ -16,7 +16,7 @@ const createNewUserController = (req, res) => {
     error: null,
   };
 
-  res.status(200).json(result)
+  res.status(201).json(result)
 };
 
 module.exports = {
