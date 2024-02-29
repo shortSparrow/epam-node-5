@@ -1,7 +1,7 @@
-const { getAllUsers } = require("../repository/getAllUsers.repository");
+const { getAllUsersRepository } = require("../repository/getAllUsers.repository");
 
 const getAllUsersController = (req, res) => {
-  const userList = getAllUsers();
+  const userList = getAllUsersRepository();
 
   const result = {
     data: userList.map((user) => ({

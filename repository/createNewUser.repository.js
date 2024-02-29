@@ -1,12 +1,14 @@
-const { users } = require("../data/database");
+const { users, usersHobbies } = require("../data/database");
 
 const createNewUserRepository = (userData) => {
+  const userId = new Date().getTime().toString();
   const user = {
-    id: new Date().getTime().toString(),
+    id: userId,
     name: userData.name,
     email: userData.email,
   };
   users.push(user);
+  usersHobbies.push({ userId: userId, hobbies: [] });
 
   return user;
 };

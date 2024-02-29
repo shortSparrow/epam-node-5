@@ -1,7 +1,7 @@
 const { users } = require("../data/database");
 
-const getAllUsers = () => {
+const getAllUsersRepository = () => {
   return [...users];
 };
 
-module.exports = { getAllUsers };
+module.exports = { getAllUsersRepository };
