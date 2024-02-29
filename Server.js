@@ -13,38 +13,47 @@ class Server {
     this.#server = http.createServer();
     this.#server.on("request", async (req, res) => {
       this.#addExtensions(res);
-
-      const matchedRoute = Object.entries(this.#middlewares).find((item) => {
-        const value = item[1];
-
-        return (
-          req.method === value.method &&
-          isUrlMathPattern(value.pattern, req.url)
-        );
-      });
-
-      const routeInfo = {
-        key: matchedRoute[0],
-        pattern: matchedRoute[1].pattern,
-      };
-
-      console.log("routePattern: ", routeInfo);
-
-      if (matchedRoute && this.#middlewares[routeInfo.key]) {
-        if (
-          req.method === "POST" ||
-          req.method === "PUT" ||
-          req.method === "PATCH"
-        ) {
-          const reqBody = await parseRequestBody(req);
-          req.body = reqBody;
-        }
-        req.params = extractDynamicParams(routeInfo.pattern, req.url);
-
-        this.#middlewares[routeInfo.key].cb(req, res);
-      }
+      await this.#handleRequest(req, res);
     });
   }
+
+  #handleRequest = async (req, res) => {
+    const routeInfo = this.#getRouteInfo(req.method, req.url);
+    if (!routeInfo) {
+      return;
+    }
+
+    if (this.#middlewares[routeInfo.key]) {
+      if (
+        req.method === "POST" ||
+        req.method === "PUT" ||
+        req.method === "PATCH"
+      ) {
+        const reqBody = await parseRequestBody(req);
+        req.body = reqBody;
+      }
+
+      req.params = extractDynamicParams(routeInfo.pattern, req.url);
+      this.#middlewares[routeInfo.key].cb(req, res);
+    }
+  };
+
+  #getRouteInfo = (method, url) => {
+    const matchedRoute = Object.entries(this.#middlewares).find((item) => {
+      const value = item[1];
+
+      return method === value.method && isUrlMathPattern(value.pattern, url);
+    });
+
+    if (!matchedRoute) {
+      return null;
+    }
+
+    return {
+      key: matchedRoute[0],
+      pattern: matchedRoute[1].pattern,
+    };
+  };
 
   #addExtensions = (res) => {
     res.status = (code) => {
@@ -60,7 +69,6 @@ class Server {
   };
 
   route = (method, path, cb) => {
-    // console.log("XX: ", `${path}:${method.toUpperCase()}`);
     this.#middlewares[`${path}:${method.toUpperCase()}`] = {
       pattern: path,
       method: method.toUpperCase(),
