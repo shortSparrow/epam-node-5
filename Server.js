@@ -60,6 +60,11 @@ class Server {
       res.statusCode = code;
       return res;
     };
+    
+    res.addHeader = (key, value) => {
+      res.appendHeader(key, value);
+      return res;
+    };
 
     res.json = (data) => {
       res.appendHeader("Content-Type", "application/json");

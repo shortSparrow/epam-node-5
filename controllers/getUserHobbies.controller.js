@@ -11,16 +11,19 @@ const getUserHobbiesController = (req, res) => {
     });
   }
 
-  return res.status(200).json({
-    data: {
-      hobbies: hobbiesResult,
-      links: {
-        self: `/api/users/${userId}/hobbies`,
-        user: `/api/users/${userId}`,
+  return res
+    .status(200)
+    .addHeader("Cache-Control", "private, max-age=14400")
+    .json({
+      data: {
+        hobbies: hobbiesResult,
+        links: {
+          self: `/api/users/${userId}/hobbies`,
+          user: `/api/users/${userId}`,
+        },
       },
-    },
-    error: null,
-  });
+      error: null,
+    });
 };
 
 module.exports = {

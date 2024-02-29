@@ -1,4 +1,6 @@
-const { getAllUsersRepository } = require("../repository/getAllUsers.repository");
+const {
+  getAllUsersRepository,
+} = require("../repository/getAllUsers.repository");
 
 const getAllUsersController = (req, res) => {
   const userList = getAllUsersRepository();
@@ -14,7 +16,10 @@ const getAllUsersController = (req, res) => {
     error: null,
   };
 
-  res.status(200).json(result);
+  res
+    .status(200)
+    .addHeader("Cache-Control", "public, max-age=14400")
+    .json(result);
 };
 
 module.exports = {
