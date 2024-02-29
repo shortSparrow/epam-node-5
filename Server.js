@@ -1,21 +1,9 @@
 const http = require("http");
-
-const parseRequestBody = (req) =>
-  new Promise((resolve, reject) => {
-    let body = "";
-
-    req.on("data", (chunk) => {
-      body += chunk.toString();
-    });
-
-    req.on("end", () => {
-      resolve(JSON.parse(body));
-    });
-
-    req.on("error", (error) => {
-      reject(error);
-    });
-  });
+const {
+  isUrlMathPattern,
+  extractDynamicParams,
+  parseRequestBody,
+} = require("./utils");
 
 class Server {
   #server;
@@ -26,9 +14,23 @@ class Server {
     this.#server.on("request", async (req, res) => {
       this.#addExtensions(res);
 
-      const key = `${req.url}:${req.method}`;
-      // console.log("key: ", key);
-      if (this.#middlewares[key]) {
+      const matchedRoute = Object.entries(this.#middlewares).find((item) => {
+        const value = item[1];
+
+        return (
+          req.method === value.method &&
+          isUrlMathPattern(value.pattern, req.url)
+        );
+      });
+
+      const routeInfo = {
+        key: matchedRoute[0],
+        pattern: matchedRoute[1].pattern,
+      };
+
+      console.log("routePattern: ", routeInfo);
+
+      if (matchedRoute && this.#middlewares[routeInfo.key]) {
         if (
           req.method === "POST" ||
           req.method === "PUT" ||
@@ -37,7 +39,9 @@ class Server {
           const reqBody = await parseRequestBody(req);
           req.body = reqBody;
         }
-        this.#middlewares[key](req, res);
+        req.params = extractDynamicParams(routeInfo.pattern, req.url);
+
+        this.#middlewares[routeInfo.key].cb(req, res);
       }
     });
   }
@@ -56,8 +60,12 @@ class Server {
   };
 
   route = (method, path, cb) => {
-    // console.log("XX: ", `${path}:${method}`);
-    this.#middlewares[`${path}:${method.toUpperCase()}`] = cb;
+    // console.log("XX: ", `${path}:${method.toUpperCase()}`);
+    this.#middlewares[`${path}:${method.toUpperCase()}`] = {
+      pattern: path,
+      method: method.toUpperCase(),
+      cb,
+    };
   };
 
   listen = (port, address, cb) => {
